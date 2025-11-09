@@ -39,7 +39,7 @@ class AuthController extends Controller
         $hashed = password_hash($password, PASSWORD_BCRYPT);
         User::create($name, $email, $hashed);
 
-        // optional welcome email
+        
         Mailer::send($email, 'Welcome to AuthBoard', "Hello $name,\n\nThanks for registering at AuthBoard.");
 
         header('Location: /login');
@@ -49,7 +49,7 @@ public function profile()
 {
     \App\Core\Session::start();
 
-    // Try both patterns
+    
     $user = \App\Core\Session::get('user');
     $userId = \App\Core\Session::get('user_id');
 
