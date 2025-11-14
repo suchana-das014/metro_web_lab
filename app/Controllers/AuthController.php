@@ -8,19 +8,25 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    // Show login page
+    // -----------------------
+    // SHOW LOGIN PAGE
+    // -----------------------
     public function showLogin()
     {
         $this->view('auth/login.php');
     }
 
-    // Show register page
+    // -----------------------
+    // SHOW REGISTER PAGE
+    // -----------------------
     public function showRegister()
     {
         $this->view('auth/register.php');
     }
 
-    // Handle registration
+    // -----------------------
+    // HANDLE REGISTRATION
+    // -----------------------
     public function register()
     {
         $name = trim($_POST['name'] ?? '');
@@ -31,6 +37,7 @@ class AuthController extends Controller
             echo "Invalid email address.";
             return;
         }
+
         if (strlen($password) < 6) {
             echo "Password must be at least 6 characters.";
             return;
@@ -39,72 +46,87 @@ class AuthController extends Controller
         $hashed = password_hash($password, PASSWORD_BCRYPT);
         User::create($name, $email, $hashed);
 
-        // optional welcome email
-        Mailer::send($email, 'Welcome to AuthBoard', "Hello $name,\n\nThanks for registering at AuthBoard.");
+        Mailer::send(
+            $email,
+            'Welcome to AuthBoard',
+            "Hello $name,\n\nThanks for registering at AuthBoard."
+        );
 
         header('Location: /login');
         exit;
     }
-public function profile()
-{
-    \App\Core\Session::start();
 
-    // Try both patterns
-    $user = \App\Core\Session::get('user');
-    $userId = \App\Core\Session::get('user_id');
+    // -----------------------
+    // PROFILE PAGE (MY PROFILE)
+    // -----------------------
+    public function profile()
+    {
+        Session::start();
+var_dump($_SESSION);
+exit;
 
-    if (!$user && !$userId) {
-        header("Location: /login");
-        exit;
-    }
 
-    // if only user_id exists, fetch user info from DB
-    if (!$user && $userId) {
+        $userId = Session::get('user_id');
+
+        if (!$userId) {
+            header("Location: /login");
+            exit;
+        }
+
+        // Load user from DB (DATABASE MUST BE db1)
         $pdo = new \PDO(
-            "mysql:host=" . (getenv('DB_HOST') ?: '127.0.0.1') . ";dbname=" . (getenv('DB_NAME') ?: 'database1') . ";charset=utf8mb4",
+            "mysql:host=" . (getenv('DB_HOST') ?: '127.0.0.1') .
+            ";dbname=" . (getenv('DB_NAME') ?: 'db1') .
+            ";charset=utf8mb4",
             getenv('DB_USER') ?: 'root',
             getenv('DB_PASS') ?: ''
         );
+
+        // Fetch user info
         $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([$userId]);
         $user = $stmt->fetch();
+
+        if (!$user) {
+            echo "User not found";
+            exit;
+        }
+
+        // Fetch user's posts
+        $stmt = $pdo->prepare("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC");
+        $stmt->execute([$userId]);
+        $posts = $stmt->fetchAll();
+
+        $this->view('auth/profile.php', ['user' => $user, 'posts' => $posts]);
     }
 
-    // Load user's posts
-    $pdo = new \PDO(
-        "mysql:host=" . (getenv('DB_HOST') ?: '127.0.0.1') . ";dbname=" . (getenv('DB_NAME') ?: 'database1') . ";charset=utf8mb4",
-        getenv('DB_USER') ?: 'root',
-        getenv('DB_PASS') ?: ''
-    );
-    $stmt = $pdo->prepare("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC");
-    $stmt->execute([$user['id']]);
-    $posts = $stmt->fetchAll();
-
-    $this->view('auth/profile.php', ['user' => $user, 'posts' => $posts]);
-}
-
-
-    // Handle login
+    // -----------------------
+    // HANDLE LOGIN
+    // -----------------------
     public function login()
-{
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    {
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
 
-    $user = User::findByEmail($email);
+        $user = User::findByEmail($email);
 
-    if ($user && password_verify($password, $user['password'])) {
-        Session::start();
-        Session::set('user_id', $user['id']);
-        Session::set('username', $user['name']);
-        Session::set('user_email', $user['email']);
+        if ($user && password_verify($password, $user['password'])) {
 
-        header('Location: /dashboard');
-        exit;
+            Session::start();
+            Session::set('user_id', $user['id']);
+            Session::set('username', $user['name']);
+            Session::set('user_email', $user['email']);
+
+            header('Location: /dashboard');
+            exit;
+        }
+
+        echo "Invalid credentials.";
     }
 
-    echo 'Invalid credentials.';
-}
-    // Handle logout
+    // -----------------------
+    // LOGOUT
+    // -----------------------
     public function logout(): void
     {
         Session::destroy();

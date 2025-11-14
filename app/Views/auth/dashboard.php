@@ -17,7 +17,7 @@ $user = $_SESSION['user'] ?? null;
   <div class="flex justify-between items-center p-4 bg-blue-600 text-white">
     <h1 class="text-xl font-bold">MySocial</h1>
     <div>
-      <a href="/profile" class="text-white hover:underline">My Profile</a>
+      <a href="/my-profile" class="text-white hover:underline">My Profile</a>
       <a href="/logout" class="ml-4 text-white hover:underline">Logout</a>
     </div>
   </div>
