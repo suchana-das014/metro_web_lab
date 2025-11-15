@@ -46,16 +46,22 @@ class AuthController extends Controller
         $hashed = password_hash($password, PASSWORD_BCRYPT);
         User::create($name, $email, $hashed);
 
+<<<<<<< HEAD
         Mailer::send(
             $email,
             'Welcome to AuthBoard',
             "Hello $name,\n\nThanks for registering at AuthBoard."
         );
+=======
+        
+        Mailer::send($email, 'Welcome to AuthBoard', "Hello $name,\n\nThanks for registering at AuthBoard.");
+>>>>>>> cdc5c90b3f67c345c399a92cfa1a5d8a942c4b09
 
         header('Location: /login');
         exit;
     }
 
+<<<<<<< HEAD
     // -----------------------
     // PROFILE PAGE (MY PROFILE)
     // -----------------------
@@ -64,6 +70,11 @@ class AuthController extends Controller
         Session::start();
 var_dump($_SESSION);
 exit;
+=======
+    
+    $user = \App\Core\Session::get('user');
+    $userId = \App\Core\Session::get('user_id');
+>>>>>>> cdc5c90b3f67c345c399a92cfa1a5d8a942c4b09
 
 
         $userId = Session::get('user_id');
